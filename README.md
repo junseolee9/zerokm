@@ -1,14 +1,51 @@
 # zerokm
 
+![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth%20%2B%20Storage-3ECF8E?logo=supabase&logoColor=white)
+![RLS](https://img.shields.io/badge/Security-Row--Level%20Security%20only-D02020)
+
 A shared space for two people living far apart: live clocks in each other's
 timezone, the distance between you on a world map, and a two-person photo
 diary. *Far apart, but 0 km in our hearts.*
 
-Multi-tenant: one deployment serves any number of couples. Each couple gets an
-isolated "space"; isolation is enforced by Postgres row-level security, not by
-application code.
+Multi-tenant — one deployment serves any number of couples. Each couple gets
+an isolated "space," and isolation is enforced entirely by Postgres row-level
+security, not by application code. There is no service-role key anywhere in
+the app; the browser talks to Supabase directly with the anon key and the
+signed-in user's session.
 
-**Stack:** Next.js 14 (App Router) · TypeScript · Supabase (Auth, Postgres, Storage) · Tailwind-era hand-rolled Bauhaus CSS · Plotly
+## Highlights
+
+A few decisions this codebase makes on purpose, worth a closer look if you're
+skimming for engineering signal:
+
+- **RLS is the only security boundary.** Every table carries `space_id`;
+  every policy reduces to one predicate, `is_member(space_id)`. No API route
+  stands between the browser and the database re-checking permissions — there's
+  nothing to keep in sync because there's only one place the rule lives.
+- **People are rows, not columns.** The diary table is
+  `entries(space_id, date, member_id, text, photo_path)` — not
+  `diary(date, person_a_text, person_b_text)`. Every per-person `if` branch
+  this would otherwise force through the codebase simply doesn't exist.
+- **Self-service account deletion without a service-role key.** Deleting a
+  Supabase Auth user normally requires the admin API. `delete_my_account()`
+  is a `SECURITY DEFINER` function owned by the schema's creator, so it can
+  reach `auth.users` — but it only ever acts on `auth.uid()`, so a client can
+  never delete anyone but itself.
+- **Private photos, signed URLs, no stored public links.** The storage
+  bucket is private; the database stores a `photo_path`, never a URL. Every
+  page load re-signs a short-lived URL through a storage policy that runs the
+  same `is_member()` check.
+- **An actual isolation test, not just a promise.** `scripts/check-rls.ts`
+  signs in as two separate real users against a live Supabase project and
+  asserts neither can read, write, or sign a storage URL for the other's
+  space — including membership-row tampering and invite-matching edge cases.
+
+## Stack
+
+Next.js 14 (App Router) · TypeScript · Supabase (Auth, Postgres, Row-Level
+Security, Storage) · Plotly (distance map) · hand-rolled Bauhaus-styled CSS
 
 ## Self-hosting
 
@@ -48,12 +85,16 @@ application code.
 - Sign in with Google → create a space (title, anniversary, your name) and
   enter your **partner's Google email**.
 - Your partner signs in with that Google account and lands in your space
-  automatically (an invitation email is sent too, if Gmail is configured).
+  automatically (an invitation email is sent too, if Gmail is configured) —
+  they just pick their own name, emoji, and timezone first.
 - Each person sets their own timezone, name, color and emoji in Settings.
   Until your partner joins, you can edit their placeholder seat too — the
   invited email can be set or changed there any time.
 - The diary is shared: either of you can write on either side — it's one
   diary for two people, not two private ones.
+- Deleting your account frees your seat (a fresh, unclaimed placeholder) and
+  wipes your own diary entries. If your partner never signed up either, the
+  whole space goes with it.
 
 ## Security model
 
@@ -89,9 +130,13 @@ npm run check:rls
 app/            routes: / (clocks+map+diary), /login, /onboarding, /settings,
                 /auth/callback, /api/notify + /api/invite (partner emails)
 components/     ClockCard, ClocksSection, TimeDiffBanner, DistanceMap,
-                CalendarGrid, DiarySection, DiaryEntry
+                CalendarGrid, DiarySection, DiaryEntry, DateField, TimezoneField
 lib/            queries.ts (all data access), supabase/ (client factories),
-                types.ts, email.ts, haversine.ts, tz-coords.json
+                types.ts, timezones.ts, email.ts, haversine.ts, tz-coords.json
 supabase/       schema.sql — the entire database, idempotent
 scripts/        check-rls.ts — isolation test
 ```
+
+## License
+
+[MIT](LICENSE)
