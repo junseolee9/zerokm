@@ -180,7 +180,8 @@ create or replace function public.create_space(
   p_anniversary   date,
   p_display_name  text,
   p_timezone      text,
-  p_partner_email text default null
+  p_partner_email text default null,
+  p_emoji         text default null
 ) returns uuid
   language plpgsql security definer
   set search_path = public, pg_temp
@@ -204,7 +205,8 @@ begin
   values (
     v_space, v_uid, 1,
     coalesce(nullif(btrim(p_display_name), ''), 'Me'),
-    '#1040C0', '🙂',
+    '#1040C0',
+    coalesce(nullif(btrim(p_emoji), ''), '🙂'),
     coalesce(nullif(btrim(p_timezone), ''), 'UTC'),
     (select email from auth.users where id = v_uid)
   );
@@ -258,10 +260,11 @@ $$;
 
 drop function if exists public.join_space(text, text, text);
 drop function if exists public.create_space(text, date, text, text); -- pre-Google-auth signature
-revoke execute on function public.create_space(text, date, text, text, text) from public;
-revoke execute on function public.claim_invite()                             from public;
-grant  execute on function public.create_space(text, date, text, text, text) to authenticated;
-grant  execute on function public.claim_invite()                             to authenticated;
+drop function if exists public.create_space(text, date, text, text, text); -- pre-emoji-field signature
+revoke execute on function public.create_space(text, date, text, text, text, text) from public;
+revoke execute on function public.claim_invite()                                   from public;
+grant  execute on function public.create_space(text, date, text, text, text, text) to authenticated;
+grant  execute on function public.claim_invite()                                   to authenticated;
 
 -- ------------------------------------------------------------- account -----
 

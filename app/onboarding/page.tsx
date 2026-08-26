@@ -59,6 +59,7 @@ export default function OnboardingPage() {
       p_display_name: (form.namedItem('name') as HTMLInputElement).value,
       p_timezone: tz,
       p_partner_email: (form.namedItem('partner') as HTMLInputElement).value || null,
+      p_emoji: (form.namedItem('emoji') as HTMLInputElement).value.trim() || null,
     })
 
     if (error) {
@@ -79,9 +80,14 @@ export default function OnboardingPage() {
     setError('')
     const form = e.currentTarget.elements
     const name = (form.namedItem('name') as HTMLInputElement).value
+    const emoji = (form.namedItem('emoji') as HTMLInputElement).value.trim()
 
     try {
-      await updateMember(joinMemberId!, { display_name: name, timezone: tz })
+      await updateMember(joinMemberId!, {
+        display_name: name,
+        timezone: tz,
+        ...(emoji ? { emoji } : {}),
+      })
       router.push('/')
       router.refresh()
     } catch (err: any) {
@@ -105,6 +111,7 @@ export default function OnboardingPage() {
               You&apos;ve been invited! Just need your name and timezone.
             </div>
             <input name="name" className="input-bauhaus" placeholder="Your name" required autoFocus />
+            <input name="emoji" className="input-bauhaus" placeholder="Your emoji (optional, shown on the map)" maxLength={4} />
             <TimezoneField value={tz} onCommit={setTz} />
             {error && (
               <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' }}>
@@ -118,6 +125,7 @@ export default function OnboardingPage() {
         ) : (
           <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <input name="name" className="input-bauhaus" placeholder="Your name" required autoFocus />
+            <input name="emoji" className="input-bauhaus" placeholder="Your emoji (optional, shown on the map)" maxLength={4} />
             <input name="title" className="input-bauhaus" placeholder="Space title (e.g. Our Distance)" />
             <DateField name="anniversary" label="When did you start dating? (optional)" />
             <TimezoneField value={tz} onCommit={setTz} />
