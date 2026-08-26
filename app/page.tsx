@@ -12,15 +12,12 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // RLS narrows both tables to my space. No membership row: first see whether
-  // a partner seat was reserved for this Google email; otherwise onboarding.
-  let { data: memberRows } = await supabase.from('members').select('*').order('slot')
-  if (!memberRows || memberRows.length === 0) {
-    const { data: claimed } = await supabase.rpc('claim_invite')
-    if (!claimed) redirect('/onboarding')
-    ;({ data: memberRows } = await supabase.from('members').select('*').order('slot'))
-    if (!memberRows || memberRows.length === 0) redirect('/onboarding')
-  }
+  // RLS narrows this to my space. No membership row: send to onboarding,
+  // which owns claim_invite() itself — an invited person still needs to
+  // pick a name and timezone there before landing here (see its 'join' mode),
+  // so this page must never claim the seat on their behalf and skip that.
+  const { data: memberRows } = await supabase.from('members').select('*').order('slot')
+  if (!memberRows || memberRows.length === 0) redirect('/onboarding')
   const members = memberRows as Member[]
 
   const { data: spaceRow } = await supabase
