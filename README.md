@@ -87,19 +87,70 @@ Security, Storage) · Plotly (distance map) · hand-rolled Bauhaus-styled CSS
 
 ## Using it
 
-- Sign in with Google → create a space (title, anniversary, your name) and
-  enter your **partner's Google email**.
-- Your partner signs in with that Google account and lands in your space
-  automatically (an invitation email is sent too, if Gmail is configured) —
-  they just pick their own name, emoji, and timezone first.
-- Each person sets their own timezone, name, color and emoji in Settings.
-  Until your partner joins, you can edit their placeholder seat too — the
-  invited email can be set or changed there any time.
-- The diary is shared: either of you can write on either side — it's one
-  diary for two people, not two private ones.
-- Deleting your account frees your seat (a fresh, unclaimed placeholder) and
-  wipes your own diary entries. If your partner never signed up either, the
-  whole space goes with it.
+Walking through it as the two people who'd actually use it — Danny, who
+starts the space, and Hailey, who gets invited into it.
+
+**Danny signs in.** No password to create, no form before you've even decided
+to use the thing — just a Google account.
+
+<img src="docs/screenshots/01-login.png" width="600" alt="Login screen with a single Continue with Google button">
+
+**Danny doesn't have a space yet, so onboarding asks for the essentials** —
+his name, an emoji to represent him on the map and calendar, a title for the
+space, when the relationship started (optional — skip it and the D-Day badge
+just doesn't show), his timezone, and — the part that turns this from a solo
+tool into a shared one — **Hailey's Google email**.
+
+<img src="docs/screenshots/02-onboarding-create.png" width="600" alt="Create-space onboarding form: name, emoji, space title, anniversary, timezone, partner's Google email">
+
+That last field is the whole invite mechanism. No invite code, no link with a
+token in it — Hailey's seat is reserved server-side against her email the
+moment Danny submits this form, and a notification goes out if Gmail is
+configured.
+
+<img src="docs/screenshots/03-invite-email.png" width="600" alt="Invitation email: 'Danny invited you to Our Distance', with a sign-in link">
+
+**Hailey clicks through and signs in with that same Google account.**
+`claim_invite()` matches her email server-side against the reserved seat —
+nothing she submits from the browser is what does the matching — and drops
+her straight into a short join form: just her name, her emoji, her timezone.
+No re-entering the space title, no partner email field, because she isn't
+creating anything — she's stepping into what Danny already made.
+
+<img src="docs/screenshots/04-onboarding-join.png" width="600" alt="Join onboarding form for the invited person: name, emoji, timezone only">
+
+**And now they're both in.** Two live clocks in each other's timezone, the
+D-Day counter, the distance between Los Angeles and Seoul on the map banner,
+color-coded per person from here on out.
+
+<img src="docs/screenshots/05-dashboard.png" width="750" alt="Main dashboard: Our Distance title, D-Day badge, two clocks (Danny in LA, Hailey in Seoul), time difference and distance banner">
+
+Scrolling down, the shared diary: a calendar where any day either of them
+wrote on lights up in their color —
+
+<img src="docs/screenshots/06-calendar.png" width="500" alt="Calendar grid for August 2026">
+
+— and picking a day opens two independent write-ups side by side, each with
+its own photo slot. It's deliberately not two private diaries; either person
+can write on either side.
+
+<img src="docs/screenshots/07-diary-entry.png" width="750" alt="Diary entry for a selected date: Danny's Day and Hailey's Day, each with a photo upload and a text area">
+
+**Settings covers what onboarding didn't ask up front** — the space title
+and anniversary stay editable, and each person's name, color, emoji, and
+timezone are theirs to change any time. Until a partner's seat is claimed,
+the other person can edit it on their behalf, exactly like the invite email
+field itself.
+
+<img src="docs/screenshots/08-settings-profile.png" width="750" alt="Settings page: space title and anniversary, then Danny and Hailey's individual name/color/emoji/timezone fields">
+
+And at the bottom, the part most side-project diaries skip: a real way out.
+Deleting your account wipes your own entries and frees your seat back to an
+unclaimed placeholder — your partner keeps the space, and can invite someone
+new into it. If neither of you ever signed up for real, the whole space goes
+with the last one to leave.
+
+<img src="docs/screenshots/09-settings-danger.png" width="750" alt="Sign out and Danger Zone with a Delete my account button">
 
 ## Security model
 
