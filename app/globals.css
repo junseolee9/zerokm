@@ -110,23 +110,6 @@ html, body {
 }
 .label-person { color: var(--pc); }
 
-/* ── Timezone selector ── */
-.tz-select {
-  width: 100%;
-  border: 2px solid var(--black);
-  border-radius: 0;
-  background: #fff;
-  box-shadow: 3px 3px 0 var(--black);
-  padding: 8px 12px;
-  font-family: var(--font-outfit), sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  appearance: none;
-  cursor: pointer;
-  outline: none;
-}
-.tz-select:focus { border-color: var(--blue); }
-
 /* ── Clock cards ── */
 .clock-card {
   background: #fff;
@@ -572,8 +555,7 @@ html, body {
   text-transform: uppercase;
   margin-top: 14px;
 }
-.settings-field .input-bauhaus,
-.settings-field .tz-select { margin-top: 6px; }
+.settings-field .input-bauhaus { margin-top: 6px; }
 .invite-code {
   font-size: 22px;
   font-weight: 900;

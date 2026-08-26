@@ -1,18 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ClockCard } from './ClockCard'
 import { TimeDiffBanner } from './TimeDiffBanner'
 import { DistanceMap } from './DistanceMap'
+import { TimezoneField } from './TimezoneField'
 import { updateMember } from '@/lib/queries'
 import type { Member } from '@/lib/types'
-
-// Populated after mount to avoid SSR/client hydration mismatch
-let _tzCache: string[] | null = null
-function getTimezones(): string[] {
-  if (!_tzCache) _tzCache = Intl.supportedValuesOf('timeZone').sort()
-  return _tzCache
-}
 
 interface Props {
   members: Member[]
@@ -24,11 +18,6 @@ export function ClocksSection({ members, myUserId }: Props) {
   const [tzs, setTzs] = useState<Record<string, string>>(
     () => Object.fromEntries(members.map(m => [m.id, m.timezone]))
   )
-  const [timezones, setTimezones] = useState<string[]>(
-    () => Array.from(new Set(members.map(m => m.timezone))).sort()
-  )
-
-  useEffect(() => { setTimezones(getTimezones()) }, [])
 
   // Your own row, or the placeholder seat nobody has claimed yet.
   const canEdit = (m: Member) => m.user_id === myUserId || m.user_id === null
@@ -51,15 +40,11 @@ export function ClocksSection({ members, myUserId }: Props) {
         {members.map(m => (
           <div key={m.id} style={{ '--pc': m.color } as React.CSSProperties}>
             <div className="person-label label-person">{m.display_name}</div>
-            <select
-              className="tz-select"
-              value={tzs[m.id]}
-              disabled={!canEdit(m)}
-              title={canEdit(m) ? undefined : `Only ${m.display_name} can change this`}
-              onChange={e => changeTz(m, e.target.value)}
-            >
-              {timezones.map(tz => <option key={tz} value={tz}>{tz}</option>)}
-            </select>
+            {canEdit(m) ? (
+              <TimezoneField value={tzs[m.id]} onCommit={tz => changeTz(m, tz)} />
+            ) : (
+              <input className="input-bauhaus" value={tzs[m.id]} disabled title={`Only ${m.display_name} can change this`} readOnly />
+            )}
           </div>
         ))}
       </div>

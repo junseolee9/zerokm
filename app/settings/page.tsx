@@ -5,20 +5,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getMySpace, updateMember, updateSpace, deleteMyAccount } from '@/lib/queries'
 import { DateField } from '@/components/DateField'
+import { TimezoneField } from '@/components/TimezoneField'
 import type { Space, Member } from '@/lib/types'
-
-// Populated after mount — same hydration guard as ClocksSection
-let _tzCache: string[] | null = null
-function getTimezones(): string[] {
-  if (!_tzCache) _tzCache = Intl.supportedValuesOf('timeZone').sort()
-  return _tzCache
-}
 
 export default function SettingsPage() {
   const [space,   setSpace]   = useState<Space | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [myUserId, setMyUserId] = useState<string | null>(null)
-  const [timezones, setTimezones] = useState<string[]>([])
   const [saved,   setSaved]   = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -34,7 +27,6 @@ export default function SettingsPage() {
       if (!mine) { router.replace('/onboarding'); return }
       setSpace(mine.space)
       setMembers(mine.members)
-      setTimezones(getTimezones())
     })()
   }, [router])
 
@@ -165,15 +157,10 @@ export default function SettingsPage() {
                 </label>
                 <label className="settings-field">
                   Timezone
-                  <select
-                    className="tz-select"
+                  <TimezoneField
                     value={m.timezone}
-                    onChange={e => saveMember(m.id, { timezone: e.target.value })}
-                  >
-                    {(timezones.length ? timezones : [m.timezone]).map(tz => (
-                      <option key={tz} value={tz}>{tz}</option>
-                    ))}
-                  </select>
+                    onCommit={tz => saveMember(m.id, { timezone: tz })}
+                  />
                 </label>
                 <label className="settings-field">
                   Notification email
