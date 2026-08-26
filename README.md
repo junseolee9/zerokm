@@ -5,6 +5,11 @@
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth%20%2B%20Storage-3ECF8E?logo=supabase&logoColor=white)
 ![RLS](https://img.shields.io/badge/Security-Row--Level%20Security%20only-D02020)
 
+**[Live demo →](https://zerokm.vercel.app)** — sign in with Google, create a
+space, invite a second Google account by email. It's a real multi-tenant
+deployment, not a mock: your data lands in an isolated space exactly the way
+a real couple's would.
+
 A shared space for two people living far apart: live clocks in each other's
 timezone, the distance between you on a world map, and a two-person photo
 diary. *Far apart, but 0 km in our hearts.*
