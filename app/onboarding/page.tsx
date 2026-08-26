@@ -1,19 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getMySpace } from '@/lib/queries'
 import { DateField } from '@/components/DateField'
 
-// Reaching this page means claim_invite() found no seat reserved for this
-// Google account (app/page.tsx tries the claim first), so the only path
-// left is starting a new space and inviting your partner.
+// app/page.tsx tries claim_invite() before ever sending someone here, but
+// this page is reachable directly too (a stale link, a refresh after an
+// earlier failed match) — so it re-checks on its own rather than trusting
+// that landing here means "definitely no space yet".
 export default function OnboardingPage() {
+  const [checking, setChecking] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  useEffect(() => {
+    (async () => {
+      if (await getMySpace()) { router.replace('/'); return }
+      const { data: claimed } = await createClient().rpc('claim_invite')
+      if (claimed) { router.replace('/'); router.refresh(); return }
+      setChecking(false)
+    })()
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -40,6 +52,10 @@ export default function OnboardingPage() {
     fetch('/api/invite', { method: 'POST' }).catch(() => {})
     router.push('/')
     router.refresh()
+  }
+
+  if (checking) {
+    return <main style={{ background: 'var(--bg)', minHeight: '100vh' }} />
   }
 
   return (

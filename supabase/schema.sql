@@ -225,7 +225,9 @@ create or replace function public.claim_invite() returns uuid
 as $$
 declare
   v_uid    uuid := auth.uid();
-  v_email  text := lower(coalesce(auth.email(), ''));
+  -- auth.jwt() reads straight from the request's JWT claims; more version-proof
+  -- than the auth.email() helper, which has moved between Supabase releases.
+  v_email  text := lower(btrim(coalesce(auth.jwt() ->> 'email', auth.email(), '')));
   v_member uuid;
   v_space  uuid;
 begin
