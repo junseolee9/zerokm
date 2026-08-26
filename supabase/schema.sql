@@ -260,3 +260,48 @@ revoke execute on function public.create_space(text, date, text, text, text) fro
 revoke execute on function public.claim_invite()                             from public;
 grant  execute on function public.create_space(text, date, text, text, text) to authenticated;
 grant  execute on function public.claim_invite()                             to authenticated;
+
+-- ------------------------------------------------------------- account -----
+
+-- Anon-key clients can never delete from auth.users (no grant, and it isn't
+-- exposed through PostgREST). This function is owned by the role that ran
+-- this script — normally `postgres`, via the dashboard SQL editor — which
+-- has real table ownership and so bypasses that restriction; the caller only
+-- gets to run it as themselves, via auth.uid(). Deleting from storage.objects
+-- must happen client-side first (see lib/queries.ts deleteMyAccount) since
+-- this function's owner does not carry the storage-object owner check.
+create or replace function public.delete_my_account() returns void
+  language plpgsql security definer
+  set search_path = public, pg_temp
+as $$
+declare
+  v_uid   uuid := auth.uid();
+  v_space uuid;
+  v_left  int;
+begin
+  if v_uid is null then
+    raise exception 'not authenticated';
+  end if;
+
+  select space_id into v_space from public.members where user_id = v_uid;
+
+  -- Cascades to this member's own entries (entries.member_id on delete cascade).
+  delete from public.members where user_id = v_uid;
+
+  if v_space is not null then
+    select count(*) into v_left from public.members
+      where space_id = v_space and user_id is not null;
+    -- Nobody left with a real account: the space was only ever the two of
+    -- you, so it has no reason to keep existing. Cascades the placeholder
+    -- seat and any remaining entries with it.
+    if v_left = 0 then
+      delete from public.spaces where id = v_space;
+    end if;
+  end if;
+
+  delete from auth.users where id = v_uid;
+end;
+$$;
+
+revoke execute on function public.delete_my_account() from public;
+grant  execute on function public.delete_my_account() to authenticated;

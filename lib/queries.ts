@@ -99,3 +99,23 @@ export async function updateSpace(spaceId: string, patch: Partial<Pick<Space, 't
   const { error } = await supabase.from('spaces').update(patch).eq('id', spaceId)
   if (error) throw error
 }
+
+// Deletes the signed-in user's Google account, member seat, and diary
+// entries. If the partner never had their own account either, the whole
+// space goes with it (see delete_my_account() in supabase/schema.sql).
+// Storage objects must be cleared here, client-side, before the RPC removes
+// the member row — once that row is gone, RLS can no longer prove membership
+// to authorize the deletes.
+export async function deleteMyAccount(memberId: string) {
+  const supabase = createClient()
+
+  const { data: myEntries } = await supabase
+    .from('entries').select('photo_path').eq('member_id', memberId).not('photo_path', 'is', null)
+  const paths = (myEntries ?? []).map(e => e.photo_path).filter((p): p is string => Boolean(p))
+  if (paths.length > 0) {
+    await supabase.storage.from('photos').remove(paths)
+  }
+
+  const { error } = await supabase.rpc('delete_my_account')
+  if (error) throw error
+}

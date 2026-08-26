@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { DateField } from '@/components/DateField'
 
 // Reaching this page means claim_invite() found no seat reserved for this
 // Google account (app/page.tsx tries the claim first), so the only path
@@ -49,7 +50,7 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <input name="name" className="input-bauhaus" placeholder="Your name" required autoFocus />
           <input name="title" className="input-bauhaus" placeholder="Space title (e.g. Our Distance)" />
-          <input name="anniversary" type="date" className="input-bauhaus" title="Anniversary (optional)" />
+          <DateField name="anniversary" label="When did you start dating? (optional)" />
           <input
             name="partner"
             type="email"

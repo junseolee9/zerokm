@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { getMySpace, updateMember, updateSpace } from '@/lib/queries'
+import { getMySpace, updateMember, updateSpace, deleteMyAccount } from '@/lib/queries'
+import { DateField } from '@/components/DateField'
 import type { Space, Member } from '@/lib/types'
 
 // Populated after mount — same hydration guard as ClocksSection
@@ -19,6 +20,9 @@ export default function SettingsPage() {
   const [myUserId, setMyUserId] = useState<string | null>(null)
   const [timezones, setTimezones] = useState<string[]>([])
   const [saved,   setSaved]   = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteErr, setDeleteErr] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -58,6 +62,22 @@ export default function SettingsPage() {
     router.refresh()
   }
 
+  async function handleDeleteAccount() {
+    const me = members.find(m => m.user_id === myUserId)
+    if (!me) return
+    setDeleting(true)
+    setDeleteErr('')
+    try {
+      await deleteMyAccount(me.id)
+      await createClient().auth.signOut()
+      router.push('/login')
+      router.refresh()
+    } catch (e: any) {
+      setDeleting(false)
+      setDeleteErr(String(e?.message ?? e))
+    }
+  }
+
   if (!space) {
     return <main style={{ background: 'var(--bg)', minHeight: '100vh' }} />
   }
@@ -82,12 +102,12 @@ export default function SettingsPage() {
             />
           </label>
           <label className="settings-field">
-            Anniversary
-            <input
-              type="date"
-              className="input-bauhaus"
+            When did you start dating?
+            <DateField
+              name="anniversary"
+              label="When did you start dating? (optional)"
               defaultValue={space.anniversary ?? ''}
-              onBlur={e => (e.target.value || null) !== space.anniversary && saveSpace({ anniversary: e.target.value || null })}
+              onChange={v => saveSpace({ anniversary: v || null })}
             />
           </label>
           {members.some(m => m.user_id === null) && (
@@ -101,7 +121,6 @@ export default function SettingsPage() {
                   const seat = members.find(m => m.user_id === null)
                   if (seat && (e.target.value || null) !== seat.invited_email) {
                     saveMember(seat.id, { invited_email: e.target.value.toLowerCase() || null })
-                    if (e.target.value) fetch('/api/invite', { method: 'POST' }).catch(() => {})
                   }
                 }}
               />
@@ -170,9 +189,47 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, margin: '24px 0 48px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, margin: '24px 0' }}>
           <a href="/" className="btn-bauhaus" style={{ textAlign: 'center', textDecoration: 'none' }}>← Back</a>
           <button className="btn-bauhaus" onClick={signOut}>Sign out</button>
+        </div>
+
+        {/* Danger zone */}
+        <div className="settings-block" style={{ borderColor: 'var(--red)', boxShadow: '6px 6px 0 var(--red)', marginBottom: 48 }}>
+          <div className="person-label" style={{ color: 'var(--red)' }}>Danger zone</div>
+          {!confirmDelete ? (
+            <button
+              className="btn-bauhaus"
+              style={{ borderColor: 'var(--red)', color: 'var(--red)', marginTop: 14 }}
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete my account
+            </button>
+          ) : (
+            <>
+              <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14, lineHeight: 1.6 }}>
+                This deletes your Google sign-in from zerokm and everything you
+                wrote in the diary. If your partner never joined, the whole
+                space goes with it. This cannot be undone.
+              </div>
+              {deleteErr && (
+                <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 12, marginTop: 8 }}>{deleteErr}</div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                <button className="btn-bauhaus" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+                  Cancel
+                </button>
+                <button
+                  className="btn-bauhaus-primary"
+                  style={{ background: 'var(--red)', borderColor: 'var(--red)' }}
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                >
+                  {deleting ? '...' : 'Yes, delete everything'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </main>
