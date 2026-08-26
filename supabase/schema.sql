@@ -277,25 +277,36 @@ create or replace function public.delete_my_account() returns void
   set search_path = public, pg_temp
 as $$
 declare
-  v_uid   uuid := auth.uid();
-  v_space uuid;
-  v_left  int;
+  v_uid     uuid := auth.uid();
+  v_member  uuid;
+  v_space   uuid;
+  v_left    int;
 begin
   if v_uid is null then
     raise exception 'not authenticated';
   end if;
 
-  select space_id into v_space from public.members where user_id = v_uid;
+  select id, space_id into v_member, v_space from public.members where user_id = v_uid;
 
-  -- Cascades to this member's own entries (entries.member_id on delete cascade).
-  delete from public.members where user_id = v_uid;
+  if v_member is not null then
+    delete from public.entries where member_id = v_member;
 
-  if v_space is not null then
+    -- Reset the seat to an unclaimed placeholder rather than deleting the
+    -- row outright — every other query (ClocksSection, the map, the diary
+    -- grid) assumes a space always has exactly two member rows, slot 1 and
+    -- slot 2. A partner who's still around keeps their space; this slot is
+    -- just open for someone new to be invited into.
+    update public.members set
+      user_id       = null,
+      invited_email = null,
+      notify_email  = null
+    where id = v_member;
+
     select count(*) into v_left from public.members
       where space_id = v_space and user_id is not null;
     -- Nobody left with a real account: the space was only ever the two of
-    -- you, so it has no reason to keep existing. Cascades the placeholder
-    -- seat and any remaining entries with it.
+    -- you, so it has no reason to keep existing. Cascades both placeholder
+    -- seats and any remaining entries with it.
     if v_left = 0 then
       delete from public.spaces where id = v_space;
     end if;

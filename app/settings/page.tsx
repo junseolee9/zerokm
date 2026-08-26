@@ -196,8 +196,10 @@ export default function SettingsPage() {
             <>
               <div style={{ fontSize: 12, fontWeight: 700, marginTop: 14, lineHeight: 1.6 }}>
                 This deletes your Google sign-in from zerokm and everything you
-                wrote in the diary. If your partner never joined, the whole
-                space goes with it. This cannot be undone.
+                wrote in the diary. If your partner is still here, they keep
+                the space and can invite someone new into your seat. If they
+                never joined either, the whole space goes with it. This
+                cannot be undone.
               </div>
               {deleteErr && (
                 <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 12, marginTop: 8 }}>{deleteErr}</div>
