@@ -1,0 +1,587 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Bauhaus Design System ─────────────────────────────────────────────── */
+
+:root {
+  --black:  #121212;
+  --blue:   #1040C0;
+  --red:    #D02020;
+  --yellow: #F0C020;
+  --bg:     #F0F0F0;
+}
+
+html, body {
+  background: var(--bg);
+  font-family: var(--font-outfit), sans-serif;
+  color: var(--black);
+}
+
+/* ── Hero ── */
+.hero-section {
+  text-align: center;
+  padding: 36px 24px 24px;
+  border-bottom: 4px solid var(--black);
+  position: relative;
+  overflow: hidden;
+}
+.hero-geo-circle {
+  position: absolute;
+  top: 24px; left: 40px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 4px solid var(--red);
+}
+.hero-geo-sq {
+  position: absolute;
+  top: 30px; right: 48px;
+  width: 40px; height: 40px;
+  background: var(--blue);
+  transform: rotate(45deg);
+}
+.hero-geo-tri {
+  position: absolute;
+  bottom: 20px; left: 80px;
+  width: 0; height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 24px solid var(--yellow);
+  opacity: 0.6;
+}
+.hero-title {
+  font-size: clamp(38px, 8vw, 88px);
+  font-weight: 900;
+  color: var(--black);
+  letter-spacing: -3px;
+  text-transform: uppercase;
+  line-height: 0.9;
+  margin-bottom: 10px;
+}
+.hero-sub {
+  font-size: clamp(11px, 1.8vw, 14px);
+  color: var(--black);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.dday-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--yellow);
+  border: 4px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  padding: 10px 32px;
+  font-size: clamp(11px, 1.8vw, 13px);
+  color: var(--black);
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+.dday-num {
+  font-size: clamp(26px, 5vw, 44px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* ── Section rules ── */
+.bauhaus-rule {
+  height: 4px;
+  background: var(--black);
+  border: none;
+  margin: 0;
+}
+.bauhaus-rule-thin {
+  height: 2px;
+  background: var(--black);
+  border: none;
+  margin: 16px 0;
+}
+
+/* ── Person labels ── */
+.person-label {
+  font-size: clamp(14px, 2.2vw, 18px);
+  font-weight: 900;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin: 20px 0 6px;
+}
+.label-person { color: var(--pc); }
+
+/* ── Timezone selector ── */
+.tz-select {
+  width: 100%;
+  border: 2px solid var(--black);
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 3px 3px 0 var(--black);
+  padding: 8px 12px;
+  font-family: var(--font-outfit), sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+.tz-select:focus { border-color: var(--blue); }
+
+/* ── Clock cards ── */
+.clock-card {
+  background: #fff;
+  border: 4px solid var(--black);
+  box-shadow: 8px 8px 0 var(--black);
+  padding: 0 0 22px;
+  margin-top: 8px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.clock-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 10px 10px 0 var(--black);
+}
+.card-topbar { height: 10px; width: 100%; margin-bottom: 18px; background: var(--pc); }
+
+.clock-corner {
+  position: absolute;
+  top: 18px; right: 14px;
+  width: 10px; height: 10px;
+}
+.clock-corner { background: var(--pc); }
+.clock-corner-slot2 { border-radius: 50%; }
+
+.clock-person {
+  font-size: clamp(18px, 3.2vw, 28px);
+  font-weight: 900;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.clock-person { color: var(--pc); }
+
+.clock-tz {
+  font-size: clamp(9px, 1.5vw, 11px);
+  color: #555;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+.clock-ampm-text {
+  font-size: clamp(9px, 1.6vw, 11px);
+  letter-spacing: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  color: #333;
+}
+.clock-time-wrap {
+  display: inline-block;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+.clock-time-wrap { border-bottom: 5px solid var(--pc); }
+.clock-time {
+  font-size: clamp(36px, 8.5vw, 70px);
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--black);
+}
+.clock-date {
+  font-size: clamp(9px, 1.6vw, 11px);
+  color: #555;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* ── Time diff banner ── */
+.timediff-banner { text-align: center; padding: 20px 0 4px; }
+.timediff-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--yellow);
+  border: 4px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  padding: 12px 36px;
+  font-size: clamp(11px, 1.8vw, 13px);
+  color: var(--black);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+.timediff-num {
+  font-size: clamp(24px, 4.5vw, 40px);
+  font-weight: 900;
+  line-height: 1;
+}
+.timediff-status {
+  font-size: clamp(9px, 1.5vw, 11px);
+  color: #555;
+  text-align: center;
+  margin-top: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* ── Distance text ── */
+.distance-text {
+  text-align: center;
+  font-size: clamp(10px, 1.6vw, 12px);
+  color: var(--black);
+  padding: 10px 0 0;
+  letter-spacing: 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.distance-text b { color: var(--red); }
+
+/* ── Diary section ── */
+.diary-main-header {
+  font-size: clamp(22px, 4vw, 40px);
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--black);
+  padding: 32px 0 16px;
+  border-top: 4px solid var(--black);
+}
+
+.cal-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 12px;
+}
+.cal-nav-title {
+  font-size: clamp(18px, 3vw, 32px);
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--black);
+  text-align: center;
+  padding: 8px 32px;
+  border-top: 4px solid var(--black);
+  border-bottom: 4px solid var(--black);
+  flex: 1;
+}
+
+.diary-sel-date {
+  font-size: clamp(14px, 2.5vw, 22px);
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--black);
+  padding: 20px 0 12px;
+  border-bottom: 4px solid var(--black);
+  margin-bottom: 16px;
+}
+
+.diary-person-header {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  color: white;
+  border: 3px solid var(--black);
+  box-shadow: 4px 4px 0 var(--black);
+}
+.diary-person-header { background: var(--pc); }
+
+.diary-entry-card {
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: white;
+  border: 3px solid var(--black);
+  box-shadow: 5px 5px 0 var(--black);
+  color: var(--black);
+  min-height: 100px;
+}
+
+/* ── Calendar table ── */
+.cal-tbl-w { width: 100%; margin-bottom: 20px; overflow-x: auto; }
+.cal-tbl {
+  width: 100%; min-width: 0; border-collapse: collapse;
+  table-layout: fixed; border: 3px solid var(--black);
+}
+.cal-tbl thead th {
+  padding: clamp(4px, 1.5vw, 10px) 2px;
+  font-size: clamp(7px, 2.2vw, 13px); font-weight: 900;
+  letter-spacing: clamp(0px, .4vw, 3px); text-transform: uppercase;
+  border-bottom: 3px solid var(--black); border-right: 1px solid #444;
+  background: var(--black); color: white; text-align: left; white-space: nowrap;
+}
+.cal-tbl thead th:last-child { border-right: none; }
+.cal-tbl thead th.sat { color: #4080FF; }
+.cal-tbl thead th.sun { color: #FF4040; }
+.cal-tbl td {
+  border-right: 1px solid #D0D0D0; border-bottom: 1px solid #D0D0D0;
+  vertical-align: top; padding: 0;
+  height: clamp(46px, 9vw, 100px);
+}
+.cal-tbl td:last-child { border-right: none; }
+.cal-tbl td.c-empty { background: #F8F8F8; }
+.c-day {
+  display: block; width: 100%; height: 100%;
+  text-decoration: none;
+  padding: clamp(3px, 1vw, 7px) clamp(2px, .8vw, 8px);
+  background: white; transition: background .12s; cursor: pointer;
+}
+.c-day:hover { background: #FFF5CC; }
+.c-day.sel   { background: var(--black); }
+.c-day.tod:not(.sel) { background: #FFFACD; }
+.c-n {
+  display: block;
+  font-size: clamp(11px, 3.5vw, 24px);
+  font-weight: 900; line-height: 1; color: var(--black);
+}
+.c-day.sel .c-n  { color: white; }
+.c-day.sat .c-n  { color: #2255CC; }
+.c-day.sun .c-n  { color: #CC2222; }
+.c-day.sel.sat .c-n { color: #90B0FF; }
+.c-day.sel.sun .c-n { color: #FF9090; }
+.c-em { display: block; font-size: clamp(8px, 2.2vw, 15px); line-height: 1.3; margin-top: 1px; }
+
+/* ── Buttons ── */
+.btn-bauhaus {
+  background: #fff;
+  color: var(--black);
+  border: 2px solid var(--black);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 var(--black);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: var(--font-outfit), sans-serif;
+  cursor: pointer;
+  padding: 6px 16px;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  font-size: 12px;
+}
+.btn-bauhaus:hover {
+  background: var(--yellow);
+  box-shadow: 1px 1px 0 var(--black);
+  transform: translate(2px, 2px);
+}
+.btn-bauhaus:active { transform: translate(3px, 3px); box-shadow: none; }
+.btn-bauhaus-primary {
+  background: var(--black);
+  color: #fff;
+  border: 2px solid var(--black);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #555;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: var(--font-outfit), sans-serif;
+  cursor: pointer;
+  padding: 10px 24px;
+  font-size: 13px;
+  width: 100%;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.btn-bauhaus-primary:hover {
+  background: var(--blue);
+  border-color: var(--blue);
+  box-shadow: 1px 1px 0 var(--black);
+  transform: translate(2px, 2px);
+}
+
+/* ── Form inputs ── */
+.input-bauhaus {
+  width: 100%;
+  border: 2px solid var(--black);
+  border-radius: 0;
+  background: #fff;
+  color: var(--black);
+  font-family: var(--font-outfit), sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  box-shadow: 3px 3px 0 var(--black);
+  padding: 10px 14px;
+  outline: none;
+}
+.input-bauhaus:focus { border-color: var(--blue); }
+
+.textarea-bauhaus {
+  width: 100%;
+  border: 2px solid var(--black);
+  border-radius: 0;
+  background: #fff;
+  color: var(--black);
+  font-family: var(--font-outfit), sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  box-shadow: 3px 3px 0 var(--black);
+  padding: 10px 14px;
+  outline: none;
+  resize: vertical;
+  min-height: 160px;
+}
+.textarea-bauhaus:focus { border-color: var(--blue); }
+
+/* ── Auth page ── */
+.auth-wrap {
+  max-width: 360px;
+  margin: 120px auto 0;
+  text-align: center;
+}
+.auth-title {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--black);
+  margin-bottom: 32px;
+  border-bottom: 4px solid var(--black);
+  padding-bottom: 16px;
+}
+
+/* ── Map placeholder ── */
+.map-loading {
+  height: 360px;
+  background: rgb(240,240,240);
+  border: 4px solid var(--black);
+}
+
+/* ── Layout container ── */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+/* ── Calendar emoji hover photo preview ── */
+.cal-tbl td { overflow: visible; }
+.c-day { overflow: visible; }
+
+.c-em {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: clamp(8px, 2.2vw, 15px);
+  line-height: 1.3;
+  margin-top: 1px;
+}
+
+.c-em-person {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
+}
+
+.c-em-preview {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 200;
+  width: 120px;
+  height: 120px;
+  background: white;
+  border: 3px solid var(--black);
+  box-shadow: 5px 5px 0 var(--black);
+  padding: 3px;
+  pointer-events: none;
+}
+.c-em-preview img { width: 100%; height: 100%; object-fit: contain; display: block; background: #f0f0f0; }
+.c-em-preview { border-color: var(--pc); }
+.c-em-preview-slot1 { left: 0; }
+.c-em-preview-slot2 { right: 0; }
+.c-em-person:hover .c-em-preview { display: block; }
+
+/* ── Diary photo block ── */
+.diary-photo-block {
+  margin-bottom: 10px;
+}
+
+.diary-photo-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 3px solid var(--black);
+  box-shadow: 5px 5px 0 var(--black);
+}
+
+.diary-photo-upload-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  border-style: dashed !important;
+  cursor: pointer;
+}
+.diary-photo-upload-btn { border-color: var(--pc) !important; color: var(--pc); }
+
+/* ── Mobile ── */
+@media (max-width: 767px) {
+  .clock-card { padding-bottom: 14px; }
+  .hero-geo-circle, .hero-geo-sq, .hero-geo-tri { display: none; }
+  .dday-badge { padding: 8px 18px; }
+  .timediff-inner { padding: 10px 20px; }
+  .c-em-preview { width: 90px; height: 90px; }
+}
+
+/* ── Settings link ── */
+.settings-link {
+  position: absolute;
+  top: 14px; right: 16px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--black);
+  text-decoration: none;
+  border: 2px solid var(--black);
+  background: #fff;
+  padding: 6px 10px;
+  box-shadow: 3px 3px 0 var(--black);
+}
+.settings-link:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--black); }
+
+/* ── Settings page ── */
+.settings-block {
+  background: #fff;
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  padding: 16px 20px 20px;
+  margin-bottom: 20px;
+}
+.settings-field {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 14px;
+}
+.settings-field .input-bauhaus,
+.settings-field .tz-select { margin-top: 6px; }
+.invite-code {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  font-variant-numeric: tabular-nums;
+  border: 3px dashed var(--black);
+  padding: 10px 14px;
+  margin-top: 6px;
+  text-align: center;
+  user-select: all;
+}
