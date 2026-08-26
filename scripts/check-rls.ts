@@ -38,6 +38,7 @@ async function ensureSpace(c: SupabaseClient, title: string): Promise<string> {
   if (members && members.length > 0) return members[0].space_id as string
   const { data, error } = await c.rpc('create_space', {
     p_title: title, p_anniversary: null, p_display_name: title, p_timezone: 'UTC',
+    p_partner_email: null,
   })
   if (error) throw error
   return data as string
@@ -80,10 +81,11 @@ async function main() {
     .update({ title: 'hacked' }).eq('id', spaceA).select()
   assert(updErr || updData?.length === 0, 'B updated A space')
 
-  // invite_code is not update-grantable at all
-  const { error: codeErr } = await a.from('spaces')
-    .update({ invite_code: 'aaaaaaaa' } as never).eq('id', spaceA)
-  assert(codeErr, 'A rewrote its own invite code')
+  // B cannot reserve A's placeholder seat for someone
+  const { error: seatErr, data: seatData } = await b.from('members')
+    .update({ invited_email: 'attacker@example.com' })
+    .eq('space_id', spaceA).is('user_id', null).select()
+  assert(seatErr || seatData?.length === 0, 'B rewrote A partner seat invitation')
 
   // --- storage isolation --------------------------------------------------
   const photoPath = `${spaceA}/2026-01-01/${aMembers![0].id}`
@@ -98,16 +100,15 @@ async function main() {
   assert.ifError(aSignErr)
   assert(aSigned?.signedUrl, 'A cannot sign its own photo')
 
-  // --- invite codes -------------------------------------------------------
-  const { error: badCode } = await b.rpc('join_space',
-    { p_code: 'nope0000', p_display_name: 'x', p_timezone: 'UTC' })
-  assert(badCode, 'join_space accepted a bogus code')
+  // --- invitations --------------------------------------------------------
+  // A reserves its seat for an email that is NOT B's; B's claim must find nothing.
+  const { error: invErr } = await a.from('members')
+    .update({ invited_email: 'someone-else@example.com' })
+    .eq('space_id', spaceA).is('user_id', null)
+  assert.ifError(invErr)
 
-  // B is already in a space, so even the real code must refuse
-  const { data: aSpace } = await a.from('spaces').select('invite_code').eq('id', spaceA).single()
-  const { error: fullErr } = await b.rpc('join_space',
-    { p_code: aSpace!.invite_code, p_display_name: 'x', p_timezone: 'UTC' })
-  assert(fullErr, 'join_space let a second-space membership happen')
+  const { data: bClaim } = await b.rpc('claim_invite')
+  assert(!bClaim, 'claim_invite seated B without an invitation')
 
   console.log('RLS check passed ✔')
 }

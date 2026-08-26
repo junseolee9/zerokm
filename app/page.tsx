@@ -12,9 +12,15 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // RLS narrows both tables to my space; no membership row means onboarding.
-  const { data: memberRows } = await supabase.from('members').select('*').order('slot')
-  if (!memberRows || memberRows.length === 0) redirect('/onboarding')
+  // RLS narrows both tables to my space. No membership row: first see whether
+  // a partner seat was reserved for this Google email; otherwise onboarding.
+  let { data: memberRows } = await supabase.from('members').select('*').order('slot')
+  if (!memberRows || memberRows.length === 0) {
+    const { data: claimed } = await supabase.rpc('claim_invite')
+    if (!claimed) redirect('/onboarding')
+    ;({ data: memberRows } = await supabase.from('members').select('*').order('slot'))
+    if (!memberRows || memberRows.length === 0) redirect('/onboarding')
+  }
   const members = memberRows as Member[]
 
   const { data: spaceRow } = await supabase

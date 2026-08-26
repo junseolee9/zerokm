@@ -5,7 +5,7 @@
 -- Isolation model: a "space" is one couple. Every table carries space_id and
 -- every policy reduces to the same question — is auth.uid() a member of this
 -- space? Table privileges are granted column by column so that the columns a
--- client must never rewrite (space_id, slot, user_id, invite_code) are simply
+-- client must never rewrite (space_id, slot, user_id) are simply
 -- not grantable, and rows are only ever created through the two SECURITY
 -- DEFINER functions at the bottom.
 
@@ -17,7 +17,6 @@ create table if not exists public.spaces (
   id          uuid primary key default gen_random_uuid(),
   title       text not null default 'zerokm',
   anniversary date,
-  invite_code text not null unique default encode(gen_random_bytes(4), 'hex'),
   created_at  timestamptz not null default now()
 );
 
@@ -32,6 +31,8 @@ create table if not exists public.members (
   emoji        text not null default '🙂',
   timezone     text not null default 'UTC',
   notify_email text,
+  -- Google email the partner seat is reserved for; claim_invite() matches on it
+  invited_email text,
   unique (space_id, slot)
 );
 
@@ -91,13 +92,13 @@ revoke all on public.members from anon, authenticated;
 revoke all on public.entries from anon, authenticated;
 
 -- No insert grant: spaces and members are created only by create_space() /
--- join_space(). No update grant on invite_code, space_id, slot or user_id:
+-- claim_invite(). No update grant on space_id, slot or user_id:
 -- rewriting those is how you would escape your own space.
 grant select                          on public.spaces  to authenticated;
 grant update (title, anniversary)     on public.spaces  to authenticated;
 
 grant select                          on public.members to authenticated;
-grant update (display_name, color, emoji, timezone, notify_email)
+grant update (display_name, color, emoji, timezone, notify_email, invited_email)
                                       on public.members to authenticated;
 
 grant select, insert, update, delete  on public.entries to authenticated;
@@ -175,10 +176,11 @@ create policy photos_delete on storage.objects
 -- need several.
 
 create or replace function public.create_space(
-  p_title        text,
-  p_anniversary  date,
-  p_display_name text,
-  p_timezone     text
+  p_title         text,
+  p_anniversary   date,
+  p_display_name  text,
+  p_timezone      text,
+  p_partner_email text default null
 ) returns uuid
   language plpgsql security definer
   set search_path = public, pg_temp
@@ -207,61 +209,54 @@ begin
     (select email from auth.users where id = v_uid)
   );
 
-  -- The partner's seat, waiting for join_space() to claim it.
-  insert into public.members (space_id, user_id, slot, display_name, color, emoji, timezone)
-  values (v_space, null, 2, 'Partner', '#D02020', '💛', 'UTC');
+  -- The partner's seat; claim_invite() hands it to whoever signs in with
+  -- the invited Google email.
+  insert into public.members (space_id, user_id, slot, display_name, color, emoji, timezone, invited_email)
+  values (v_space, null, 2, 'Partner', '#D02020', '💛', 'UTC',
+          lower(nullif(btrim(p_partner_email), '')));
 
   return v_space;
 end;
 $$;
 
-create or replace function public.join_space(
-  p_code         text,
-  p_display_name text,
-  p_timezone     text
-) returns uuid
+create or replace function public.claim_invite() returns uuid
   language plpgsql security definer
   set search_path = public, pg_temp
 as $$
 declare
   v_uid    uuid := auth.uid();
-  v_space  uuid;
+  v_email  text := lower(coalesce(auth.email(), ''));
   v_member uuid;
+  v_space  uuid;
 begin
-  if v_uid is null then
-    raise exception 'not authenticated';
+  if v_uid is null or v_email = '' then
+    return null;
   end if;
   if exists (select 1 from public.members where user_id = v_uid) then
-    raise exception 'already in a space';
+    return null; -- already seated somewhere
   end if;
 
-  select id into v_space from public.spaces
-  where invite_code = lower(btrim(p_code));
-  if v_space is null then
-    raise exception 'invalid invite code';
-  end if;
-
-  -- FOR UPDATE so two people redeeming the same code at once cannot both win.
-  select id into v_member from public.members
-  where space_id = v_space and user_id is null
-  order by slot limit 1
+  -- FOR UPDATE so two sessions claiming at once cannot both win the seat.
+  select id, space_id into v_member, v_space from public.members
+  where user_id is null and lower(invited_email) = v_email
+  order by id limit 1
   for update;
   if v_member is null then
-    raise exception 'space is full';
+    return null; -- no invitation for this email
   end if;
 
   update public.members set
     user_id      = v_uid,
-    display_name = coalesce(nullif(btrim(p_display_name), ''), display_name),
-    timezone     = coalesce(nullif(btrim(p_timezone), ''), timezone),
-    notify_email = (select email from auth.users where id = v_uid)
+    notify_email = coalesce(notify_email, v_email)
   where id = v_member;
 
   return v_space;
 end;
 $$;
 
-revoke execute on function public.create_space(text, date, text, text) from public;
-revoke execute on function public.join_space(text, text, text)         from public;
-grant  execute on function public.create_space(text, date, text, text) to authenticated;
-grant  execute on function public.join_space(text, text, text)         to authenticated;
+drop function if exists public.join_space(text, text, text);
+drop function if exists public.create_space(text, date, text, text); -- pre-Google-auth signature
+revoke execute on function public.create_space(text, date, text, text, text) from public;
+revoke execute on function public.claim_invite()                             from public;
+grant  execute on function public.create_space(text, date, text, text, text) to authenticated;
+grant  execute on function public.claim_invite()                             to authenticated;

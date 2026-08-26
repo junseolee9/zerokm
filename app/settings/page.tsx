@@ -90,10 +90,23 @@ export default function SettingsPage() {
               onBlur={e => (e.target.value || null) !== space.anniversary && saveSpace({ anniversary: e.target.value || null })}
             />
           </label>
-          <div className="settings-field">
-            Invite code — share this with your partner
-            <div className="invite-code">{space.invite_code}</div>
-          </div>
+          {members.some(m => m.user_id === null) && (
+            <label className="settings-field">
+              Partner&apos;s Google email — they land here when they sign in with it
+              <input
+                type="email"
+                className="input-bauhaus"
+                defaultValue={members.find(m => m.user_id === null)?.invited_email ?? ''}
+                onBlur={e => {
+                  const seat = members.find(m => m.user_id === null)
+                  if (seat && (e.target.value || null) !== seat.invited_email) {
+                    saveMember(seat.id, { invited_email: e.target.value.toLowerCase() || null })
+                    if (e.target.value) fetch('/api/invite', { method: 'POST' }).catch(() => {})
+                  }
+                }}
+              />
+            </label>
+          )}
         </div>
 
         {/* Members */}

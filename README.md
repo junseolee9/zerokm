@@ -17,16 +17,18 @@ application code.
 2. **Run the schema.** Dashboard → SQL Editor → paste the whole of
    [`supabase/schema.sql`](supabase/schema.sql) → Run. This creates the
    tables, RLS policies, the private `photos` bucket, and the
-   `create_space` / `join_space` functions. Safe to re-run.
+   `create_space` / `claim_invite` functions. Safe to re-run.
 
-3. **Enable email sign-in.** Dashboard → Authentication → Providers → Email.
-   Magic links are the only sign-in method the app uses; no passwords.
-   Optionally plug your own SMTP (Authentication → SMTP) to lift the default
-   send-rate limits — the same Gmail app password used for notifications works.
+3. **Enable Google sign-in.** Dashboard → Authentication → Providers →
+   Google. Create an OAuth client in [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   (type: Web application), add the callback URL Supabase shows you
+   (`https://<project>.supabase.co/auth/v1/callback`), and paste the client
+   ID + secret into Supabase. Google is the only sign-in method — invitations
+   match on the partner's Google email.
 
 4. **Configure env.** Copy `.env.local.example` to `.env.local` and fill in
-   the Supabase URL + anon key. `GMAIL_*` is optional (photo notification
-   emails); leave blank to disable.
+   the Supabase URL + anon key. `GMAIL_*` is optional (invitation + photo
+   notification emails); leave blank to disable.
 
 5. **Run.**
 
@@ -36,17 +38,20 @@ application code.
    ```
 
 6. **Deploy** to Vercel (or anywhere Next.js runs). Set the same env vars,
-   plus `NEXT_PUBLIC_SITE_URL=https://your-domain` — it's used in magic-link
+   plus `NEXT_PUBLIC_SITE_URL=https://your-domain` — it's used in OAuth
    redirects and notification emails. Add your domain to Supabase →
    Authentication → URL Configuration → Redirect URLs
    (`https://your-domain/auth/callback`).
 
 ## Using it
 
-- Sign in with your email → create a space (title, anniversary, your name).
-- Your partner signs in and enters the **invite code** shown in Settings.
+- Sign in with Google → create a space (title, anniversary, your name) and
+  enter your **partner's Google email**.
+- Your partner signs in with that Google account and lands in your space
+  automatically (an invitation email is sent too, if Gmail is configured).
 - Each person sets their own timezone, name, color and emoji in Settings.
-  Until your partner joins, you can edit their placeholder seat too.
+  Until your partner joins, you can edit their placeholder seat too — the
+  invited email can be set or changed there any time.
 - The diary is shared: either of you can write on either side — it's one
   diary for two people, not two private ones.
 
@@ -57,9 +62,11 @@ application code.
   anon key + user session — there is no service-role key anywhere in the app.
 - Photos live in a **private** bucket keyed by `{space_id}/{date}/{member_id}`
   and are served through short-lived signed URLs.
-- Spaces and memberships are only created via `security definer` RPCs, so
-  clients can never insert membership rows or rewrite `space_id` / `slot` /
-  `invite_code` (those columns have no update grant at all).
+- Spaces and memberships are only created via `security definer` RPCs
+  (`create_space`, `claim_invite`), so clients can never insert membership
+  rows or rewrite `space_id` / `slot` / `user_id` (no update grant at all).
+  Seat matching compares the signed-in Google email against `invited_email`
+  inside the RPC — nothing client-supplied is trusted.
 
 Verify all of it against a live project:
 
@@ -72,7 +79,7 @@ npm run check:rls
 
 ```
 app/            routes: / (clocks+map+diary), /login, /onboarding, /settings,
-                /auth/callback, /api/notify (partner email ping)
+                /auth/callback, /api/notify + /api/invite (partner emails)
 components/     ClockCard, ClocksSection, TimeDiffBanner, DistanceMap,
                 CalendarGrid, DiarySection, DiaryEntry
 lib/            queries.ts (all data access), supabase/ (client factories),

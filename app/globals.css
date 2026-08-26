@@ -585,3 +585,13 @@ html, body {
   text-align: center;
   user-select: all;
 }
+
+/* ── Google sign-in ── */
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+.google-mark { width: 18px; height: 18px; background: #fff; padding: 2px; }

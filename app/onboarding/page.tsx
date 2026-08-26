@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-type Mode = 'create' | 'join'
-
+// Reaching this page means claim_invite() found no seat reserved for this
+// Google account (app/page.tsx tries the claim first), so the only path
+// left is starting a new space and inviting your partner.
 export default function OnboardingPage() {
-  const [mode, setMode] = useState<Mode>('create')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -19,29 +19,26 @@ export default function OnboardingPage() {
     setLoading(true)
     setError('')
     const form = e.currentTarget.elements
-    const name = (form.namedItem('name') as HTMLInputElement).value
     const supabase = createClient()
 
-    const { error } = mode === 'create'
-      ? await supabase.rpc('create_space', {
-          p_title: (form.namedItem('title') as HTMLInputElement).value,
-          p_anniversary: (form.namedItem('anniversary') as HTMLInputElement).value || null,
-          p_display_name: name,
-          p_timezone: browserTz,
-        })
-      : await supabase.rpc('join_space', {
-          p_code: (form.namedItem('code') as HTMLInputElement).value,
-          p_display_name: name,
-          p_timezone: browserTz,
-        })
+    const { error } = await supabase.rpc('create_space', {
+      p_title: (form.namedItem('title') as HTMLInputElement).value,
+      p_anniversary: (form.namedItem('anniversary') as HTMLInputElement).value || null,
+      p_display_name: (form.namedItem('name') as HTMLInputElement).value,
+      p_timezone: browserTz,
+      p_partner_email: (form.namedItem('partner') as HTMLInputElement).value || null,
+    })
 
     if (error) {
       setError(error.message)
       setLoading(false)
-    } else {
-      router.push('/')
-      router.refresh()
+      return
     }
+
+    // Best-effort invitation email; matching works even if it never sends.
+    fetch('/api/invite', { method: 'POST' }).catch(() => {})
+    router.push('/')
+    router.refresh()
   }
 
   return (
@@ -49,40 +46,27 @@ export default function OnboardingPage() {
       <div className="auth-wrap">
         <div className="auth-title">zerokm</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
-          <button
-            type="button"
-            className={mode === 'create' ? 'btn-bauhaus-primary' : 'btn-bauhaus'}
-            onClick={() => { setMode('create'); setError('') }}
-          >
-            New space
-          </button>
-          <button
-            type="button"
-            className={mode === 'join' ? 'btn-bauhaus-primary' : 'btn-bauhaus'}
-            onClick={() => { setMode('join'); setError('') }}
-          >
-            I have a code
-          </button>
-        </div>
-
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <input name="name" className="input-bauhaus" placeholder="Your name" required />
-          {mode === 'create' ? (
-            <>
-              <input name="title" className="input-bauhaus" placeholder="Space title (e.g. Our Distance)" />
-              <input name="anniversary" type="date" className="input-bauhaus" title="Anniversary (optional)" />
-            </>
-          ) : (
-            <input name="code" className="input-bauhaus" placeholder="Invite code" required />
-          )}
+          <input name="name" className="input-bauhaus" placeholder="Your name" required autoFocus />
+          <input name="title" className="input-bauhaus" placeholder="Space title (e.g. Our Distance)" />
+          <input name="anniversary" type="date" className="input-bauhaus" title="Anniversary (optional)" />
+          <input
+            name="partner"
+            type="email"
+            className="input-bauhaus"
+            placeholder="Partner's Google email (optional)"
+          />
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#555', letterSpacing: 1, textAlign: 'left' }}>
+            When your partner signs in with that Google account, they land in
+            this space automatically. You can set or change it later in Settings.
+          </div>
           {error && (
             <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' }}>
               {error}
             </div>
           )}
           <button type="submit" className="btn-bauhaus-primary" disabled={loading}>
-            {loading ? '...' : mode === 'create' ? 'Create' : 'Join'}
+            {loading ? '...' : 'Create our space'}
           </button>
         </form>
       </div>

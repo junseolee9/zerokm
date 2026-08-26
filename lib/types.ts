@@ -2,7 +2,6 @@ export type Space = {
   id: string
   title: string
   anniversary: string | null
-  invite_code: string
 }
 
 export type Member = {
@@ -15,6 +14,7 @@ export type Member = {
   emoji: string
   timezone: string
   notify_email: string | null
+  invited_email: string | null
 }
 
 export type Entry = {
