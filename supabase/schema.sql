@@ -282,6 +282,7 @@ as $$
 declare
   v_uid     uuid := auth.uid();
   v_member  uuid;
+  v_slot    smallint;
   v_space   uuid;
   v_left    int;
 begin
@@ -289,20 +290,26 @@ begin
     raise exception 'not authenticated';
   end if;
 
-  select id, space_id into v_member, v_space from public.members where user_id = v_uid;
+  select id, slot, space_id into v_member, v_slot, v_space
+    from public.members where user_id = v_uid;
 
   if v_member is not null then
     delete from public.entries where member_id = v_member;
 
-    -- Reset the seat to an unclaimed placeholder rather than deleting the
-    -- row outright — every other query (ClocksSection, the map, the diary
-    -- grid) assumes a space always has exactly two member rows, slot 1 and
-    -- slot 2. A partner who's still around keeps their space; this slot is
-    -- just open for someone new to be invited into.
+    -- Reset the seat to a fresh, unclaimed placeholder rather than deleting
+    -- the row outright — every other query (ClocksSection, the map, the
+    -- diary grid) assumes a space always has exactly two member rows, slot 1
+    -- and slot 2. Every identity field goes back to slot defaults too, not
+    -- just user_id: leaving the old name/color/emoji/timezone behind would
+    -- mean the partner keeps seeing "you" on their dashboard after you're gone.
     update public.members set
       user_id       = null,
       invited_email = null,
-      notify_email  = null
+      notify_email  = null,
+      display_name  = 'Partner',
+      color         = case v_slot when 1 then '#1040C0' else '#D02020' end,
+      emoji         = case v_slot when 1 then '🙂'       else '💛'       end,
+      timezone      = 'UTC'
     where id = v_member;
 
     select count(*) into v_left from public.members
