@@ -67,11 +67,19 @@ application code.
   rows or rewrite `space_id` / `slot` / `user_id` (no update grant at all).
   Seat matching compares the signed-in Google email against `invited_email`
   inside the RPC — nothing client-supplied is trusted.
+- Account deletion (`delete_my_account`) removes the caller's own `auth.users`
+  row — normally an admin-only operation — without a service-role key in the
+  app. The function is owned by the role that ran `schema.sql`, so it can
+  touch `auth.users`, but it only ever acts on `auth.uid()`, so a client can
+  only ever delete itself.
 
-Verify all of it against a live project:
+Verify the isolation guarantees against a live project:
 
 ```bash
-# create the two test users listed in .env.local.example first
+# 1. In the Supabase dashboard, enable Authentication > Providers > Email
+#    (password) — just for these two throwaway test accounts; the app
+#    itself only ever offers Google sign-in.
+# 2. Create the two users listed in .env.local.example with that provider.
 npm run check:rls
 ```
 

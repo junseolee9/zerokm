@@ -18,5 +18,9 @@ build/
 *.pem
 npm-debug.log*
 
+# IDE
+.idea/
+.vscode/
+
 # ts
 tsconfig.tsbuildinfo
